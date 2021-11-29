@@ -1,22 +1,13 @@
-import express from 'express';
-import bodyParser from 'body-parser';
-import JSONdb from 'simple-json-db';
 import { v4 as uuidv4 } from 'uuid';
-
-
-
-const router = express.Router();
-//const JSONdb = require('simple-json-db');
+import JSONdb from 'simple-json-db';
 const db = new JSONdb('./json_database/entry_db.json');
 
 
-// Get all entries
-router.get('/', (req, res) => {
+export const getEntries = (req, res) => {
     res.send(db.JSON());
-})
+}
 
-// Add entry to database
-router.post('/', (req, res) => {
+export const createEntry = (req, res) => {
 
     console.log("Writing to database:");
     console.log(req.body);
@@ -26,10 +17,9 @@ router.post('/', (req, res) => {
 
     // Response from post
     res.send('Successfully written to database!');
-})
+}
 
-// route by ID
-router.get('/:id', (req, res) => {
+export const getEntryById = (req, res) => {
     const { id } = req.params;
     if(db.get(id))
     {
@@ -39,12 +29,9 @@ router.get('/:id', (req, res) => {
     {
         res.send("The requested resource hasnt been found!");
     }
-})
+}
 
-
-
-// route by title
-router.get('/title/:title', (req, res) => {
+export const getEntryByTitle = (req, res) => {
     var { title } = req.params;
     var json_obj = db.JSON();
     var Response = [];
@@ -65,11 +52,9 @@ router.get('/title/:title', (req, res) => {
     {
         res.send("No entrys found matching the specified title!");
     }
-})
+}
 
-
-// delete entries
-router.delete('/:id', (req, res) => {
+export const deleteEntry = (req, res) => {
     const { id } = req.params;
     if(db.has(id))
     {
@@ -81,8 +66,39 @@ router.delete('/:id', (req, res) => {
     {
         res.send("Entry with ID ${id} not found! Couldnt delete!");
     }
+}
 
-})
+export const updateEntry = (req, res) => {
+    const { id } = req.params;
+    const {title, category, date} = req.body;
+
+    // If we found matching database entry
+    if(db.has(id))
+    {
+        var entry = db.get(id);
+        if(title)
+        {
+            entry.title = title;
+        }
+        if(category)
+        {
+            entry.category = category;
+        }
+        if(date)
+        {
+            entry.date = date;
+        }
+        db.set(entry.id, entry);
+        db.sync();
+
+        res.send("Successfully changed Diary-Entry!");
+    }
+    // No database entry found
+    else
+    {
+        res.send('No matching entry to update found!');
+    }
 
 
-export default router;
+    
+}
